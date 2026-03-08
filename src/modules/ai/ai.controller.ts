@@ -17,6 +17,20 @@ const aiAsk = async (req: Request, res: Response) => {
   }
 };
 
+const googleAsk = async (req: Request, res: Response) => {
+  try {
+    const { prompt, mode } = req.body;
+    const response = await AIService.googleAsk(prompt, mode);
+
+    const chatEntry = await AIAsk.create({ prompt, response });
+
+    res.status(200).json(chatEntry);
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
 export const AIController = {
   aiAsk,
+  googleAsk,
 };

@@ -27,3 +27,4 @@ export const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export const HF_TOKEN = process.env.HF_TOKEN;
 export const HF_API_KEY_TWO = process.env.HF_API_KEY_TWO;
 export const GROQ_API_KEY = process.env.GROQ_API_KEY;
+export const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
