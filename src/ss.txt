@@ -1,0 +1,87 @@
+● Logical Errors Found in provider Meetup Server
+
+  I've completed a comprehensive analysis of your project. Here's a complete list of logical errors identified:
+
+  Authentication & Authorization (7 errors)
+
+  1. src/middlewares/auth.ts:22 - JWT_SECRET_KEY could be undefined, no runtime validation
+  2. src/middlewares/auth.ts:25 - Role checking could fail if token doesn't contain role field
+  3. src/modules/Order/order.service.ts:13-16 - No authorization check - any user can access any order
+  4. src/utils/socket.ts:58-62 - No validation that sender is participant before saving message
+
+  Business Logic Errors (23 errors)
+
+  5. src/modules/user/user.controller.ts:147-163 - Race condition: provider registration executes two conflicting database updates
+  6. src/modules/user/user.controller.ts:163 - Missing return statement causes code fall-through
+  7. src/modules/providerBooking/providerBooking.service.ts:38-46 - Duplicate booking check doesn't validate overlapping time ranges
+  8. src/modules/providerBooking/providerBooking.service.ts:96-99 - Order status hardcoded as "pending", never updated
+  9. src/modules/Wallet/wallet.service.ts:93-95 - Withdrawal allowed from newly created wallets with 0 balance
+  10. src/modules/Invite/invite.service.ts:78-80 - Date validation uses AND (&&) instead of OR (||) - logically impossible condition
+  11. src/modules/Invite/invite.service.ts:48-55 - Overlapping invite check uses incorrect <= and >= logic
+  12. src/modules/Invite/invite.service.ts:162 - Division by zero risk if participants array is empty
+  13. src/modules/Invite/invite.service.ts:490 - Incorrect calculation: invite.extraChargeAmount / invite.participants.length - 1 (missing parentheses)
+  14. src/modules/Invite/invite.service.ts:505-581 - Nested else-if creates unreachable code for payment logic
+  15. src/modules/Invite/invite.service.ts:117-136 - Critical wallet balance checks commented out
+  16. src/modules/Offer/offer.service.ts:96-111 - Same overlapping date logic error as invites
+  17. src/modules/Offer/offer.service.ts:147-149 - Expiration date validation incorrect (should be before appointment, not after)
+  18. src/modules/Offer/offer.service.ts:376 - Money transferred to provider ID instead of provider's wallet user ID
+  19. src/modules/Offer/offer.service.ts:407-415 - Organizer's amountToPay not updated when tracking menu items
+  20. src/modules/Offer/offer.service.ts:359-438 - Inconsistent payment timing: "Each pay" immediate, "Organizer pay all" never executes
+  21. src/modules/Post/post.service.ts:81 - Incomplete code: const user = await UserModel.find (syntax error)
+  22. src/modules/Post/post.service.ts:74 - $addToSet prevents multiple comments from same user
+  23. src/modules/Post/post.controller.ts:30-31 - Accessing req.body.image when image comes from req.files
+  24. src/modules/payment/payment.service.ts:26 - Date calculation off by one: day + 1 and 0, 0, 0, -1
+  25. src/modules/user/user.service.ts:84 - Hardcoded filter { role: { $ne: "mechanic" } } - wrong domain logic
+  26. src/modules/Menu/menu.service.ts:9-12 - Overly restrictive duplicate check prevents legitimate menu variations
+  27. src/utils/socket.ts:119 - Finding admins by role may return wrong user types
+
+  Database Operation Errors (9 errors)
+
+  28. src/modules/Invite/invite.service.ts:443-451 - Update filter may silently fail if organizer not in array
+  29. src/modules/Offer/offer.service.ts:243 - UserOfferProcessModel.create without session breaks transaction atomicity
+  30. src/modules/Offer/offer.service.ts:254 - Same issue - create without session parameter
+  31. src/modules/Review/review.service.ts:31-32 - $match expects ObjectId but receives string
+  32. src/modules/Timer/timer.service.ts:59-63 - Finds timer by startTime but multiple timers could have same timestamp
+  33. src/modules/GroupChat/groupChat.service.ts:4 - Populate fields don't match schema (name/profileImage vs firstName/lastName/image)
+  34. src/modules/payment/payment.service.ts:64 - Sorting by 'date' field but schema likely uses 'createdAt'
+
+  Data Validation Problems (5 errors)
+
+  35. src/modules/providerBooking/providerBooking.service.ts:70 - Type coercion with optional chaining: userWallet?.totalBalance as number could be
+  undefined
+  36. src/modules/Wallet/wallet.service.ts:58 - Silent failure: wallet.totalBalance += amount ?? 0 adds 0 if amount missing
+  37. src/modules/Wallet/wallet.service.ts:54-56 - Wallets can be created for non-existent users
+
+  Security Logic Flaws (2 errors)
+
+  38. src/modules/user/user.controller.ts:384 - Email passed via query parameter (logged in URLs and server logs)
+  39. src/modules/user/user.service.ts:130-133 - getStoredOTP doesn't check expiration before returning
+
+  Error Handling Issues (4 errors)
+
+  40. src/middlewares/globalErrorHandler.ts:36-41 - Check order wrong: Error check before AppError check
+  41. src/middlewares/globalErrorHandler.ts:43 - Always returns 500 regardless of errorInfo.statusCode
+  42. src/modules/user/user.controller.ts:459-464 - Wallet creation assumes result._id is defined without null check
+
+  State Management (2 errors)
+
+  43. src/modules/Timer/timer.service.ts:4-5 - Global module-level timer variables cause race conditions in concurrent requests
+
+  API Endpoint Logic (2 errors)
+
+  44. src/modules/user/user.controller.ts:484 - Inconsistent parameter sources: email from query, OTP from body
+  45. src/modules/Offer/offer.service.ts:310-313 - Error message typo: "Your is already a participant"
+
+  Resource Management (1 error)
+
+  46. src/modules/user/user.controller.ts:445-447 - PendingUserModel and OTPModel records never cleaned up
+
+  ---
+  Total: 46+ distinct logical errors identified
+
+  The most critical issues are:
+  - Payment/wallet operations not executing correctly
+  - Transaction atomicity broken in multiple places
+  - Race conditions in timers and provider registration
+  - Authorization bypasses in orders and socket messages
+  - Date validation logic completely broken in invites/offers
